@@ -13,7 +13,7 @@ security = HTTPBearer()
 # Create FastAPI app
 app = FastAPI(
     title="Risk Assessment Backend API",
-    #root_path="/api"
+    root_path="/api"
     
 )
 
@@ -36,10 +36,10 @@ async def root():
 
 # Include routers
 #app.include_router(example_router.router)
-app.include_router(studies_router.router , prefix="/api/v1",tags=["Risk Assessment Backend API"])
-app.include_router(assessment_router.router , prefix="/api/v1",tags=["Risk Assessment Backend API"])
-app.include_router(notification_router.router , prefix="/api/v1",tags=["Risk Assessment Backend API"])
-app.include_router(audit_router.router , prefix="/api/v1",tags=["Risk Assessment Backend API"])
+app.include_router(studies_router.router , prefix="/v1",tags=["Risk Assessment Backend API"])
+app.include_router(assessment_router.router , prefix="/v1",tags=["Risk Assessment Backend API"])
+app.include_router(notification_router.router , prefix="/v1",tags=["Risk Assessment Backend API"])
+app.include_router(audit_router.router , prefix="/v1",tags=["Risk Assessment Backend API"])
 
  
 
