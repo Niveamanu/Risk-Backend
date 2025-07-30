@@ -30,3 +30,4 @@ class StudyResponse(BaseModel):
     # Assessment information (nullable)
     monitoring_schedule: Optional[str] = None  # from assessment table
     assessment_status: Optional[str] = None    # from assessment table 
+    crcname: Optional[str] = None

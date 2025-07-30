@@ -74,7 +74,8 @@ class StudiesService:
                     s.site_director,
                     s.site_director_email,
                     a.monitoring_schedule,
-                    a.status as assessment_status
+                    a.status as assessment_status,
+                    s.crcname
                 FROM "Risk Assessment".riskassessment_site_study s
                 LEFT JOIN "Risk Assessment".assessments a ON s.id = a.study_id
                 WHERE {where_sql}
@@ -201,7 +202,8 @@ class StudiesService:
                     s.phase,
                     COALESCE(a.overall_risk_score, 0) as risk_score,
                     a.id as assessment_id,
-                    a.monitoring_schedule
+                    a.monitoring_schedule,
+                    s.crcname
                 FROM "Risk Assessment".riskassessment_site_study s
                 INNER JOIN "Risk Assessment".assessments a ON s.id = a.study_id
                 WHERE a.overall_risk_score IS NOT NULL
@@ -246,7 +248,8 @@ class StudiesService:
                     "phase": row['phase'] or "Not specified",
                     "risk": int(row['risk_score']),
                     "assessment_id": row['assessment_id'],  # Additional field for potential "View Assessment" action
-                    "monitoring_schedule": row['monitoring_schedule'] or "Not specified"
+                    "monitoring_schedule": row['monitoring_schedule'] or "Not specified",
+                    "crcname": row['crcname']
                 })
             
             logger.info(f"Generated risk table data with {len(risk_table_data)} entries")
@@ -488,6 +491,7 @@ class StudiesService:
                     s.site_director_email,
                     a.status as assessment_status,
                     s.sponsor_code,
+                    s.crcname,
                     a.created_at
                 FROM "Risk Assessment".riskassessment_site_study s
                 INNER JOIN "Risk Assessment".assessments a ON s.id = a.study_id
@@ -564,6 +568,7 @@ class StudiesService:
                     "site_director_email": row['site_director_email'],
                     "assessment_status": row['assessment_status'],
                     "sponsor_code": row['sponsor_code'],
+                    "crcname": row['crcname'],
                     "created_at": row['created_at'].strftime('%Y-%m-%d') if row['created_at'] else None
                 })
             

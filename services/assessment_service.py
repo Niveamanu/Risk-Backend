@@ -1092,7 +1092,8 @@ class AssessmentService:
                     a.updated_by_email as reviewed_by_email,
                     a.comments,
                     a.created_at as assessment_created_at,
-                    a.updated_at as assessment_updated_at
+                    a.updated_at as assessment_updated_at,
+                    s.crcname
                 FROM "Risk Assessment".riskassessment_site_study s
                 INNER JOIN "{self.schema_name}".assessments a ON s.id = a.study_id
             """
@@ -1219,7 +1220,8 @@ class AssessmentService:
                         "updated_at": study_dict['assessment_updated_at'],
                         "risk_dashboard": risk_dashboard,
                         "summary_comments": summary_comments,
-                        "approval_data": approval_data
+                        "approval_data": approval_data,
+                        "crcname": study_dict['crcname']
                     }
                     
                     # Populate approved/rejected by information from approval data
@@ -1253,7 +1255,8 @@ class AssessmentService:
                         "assessment_status": study_dict['assessment_status'],
                         "created_at": None,  # Studies table doesn't have these fields
                         "updated_at": None,  # Studies table doesn't have these fields
-                        "assessment_data": assessment_data
+                        "assessment_data": assessment_data,
+                        "crcname": study_dict['crcname']
                     }
                     
                     assessed_studies.append(study_structure)
