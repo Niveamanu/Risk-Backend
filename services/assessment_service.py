@@ -88,7 +88,7 @@ class AssessmentService:
             # Validate study_id exists
             study_check_query = """
                 SELECT id FROM "Risk Assessment".riskassessment_site_study
-                WHERE id = %s
+                WHERE id = %s AND status != 'Inactive'
             """
             study_result = db.execute_query(study_check_query, [study_id])
             if not study_result:
@@ -1101,6 +1101,9 @@ class AssessmentService:
             where_clauses = []
             params = []
             
+            # Add status filter to exclude inactive studies
+            where_clauses.append("s.status != 'Inactive'")
+            
             # Add user type filtering if specified
             if user_type:
                 if user_type.upper() == "PI":
@@ -1303,7 +1306,7 @@ class AssessmentService:
             active_sites_query = f"""
                 SELECT COUNT(DISTINCT s.site) as count
                 FROM "Risk Assessment".riskassessment_site_study s
-                WHERE {where_clause} AND   s.active = 'true'
+                WHERE {where_clause} AND s.active = 'true' AND s.status != 'Inactive'
             """
             active_sites_result = db.execute_query(active_sites_query, [user_email])
             total_active_sites = active_sites_result[0]['count'] if active_sites_result else 0
@@ -1312,7 +1315,7 @@ class AssessmentService:
             active_studies_query = f"""
                 SELECT COUNT(*) as count
                 FROM "Risk Assessment".riskassessment_site_study s
-                WHERE {where_clause} AND  s.active = 'true'
+                WHERE {where_clause} AND s.active = 'true' AND s.status != 'Inactive'
             """
             active_studies_result = db.execute_query(active_studies_query, [user_email])
             total_active_studies = active_studies_result[0]['count'] if active_studies_result else 0
@@ -1322,7 +1325,7 @@ class AssessmentService:
                 SELECT COUNT(DISTINCT s.id) as count
                 FROM "Risk Assessment".riskassessment_site_study s
                 INNER JOIN "{self.schema_name}".assessments a ON s.id = a.study_id
-                WHERE {where_clause}
+                WHERE {where_clause} AND s.status != 'Inactive'
             """
             assessed_studies_result = db.execute_query(assessed_studies_query, [user_email])
             total_assessed_studies = assessed_studies_result[0]['count'] if assessed_studies_result else 0
@@ -1333,7 +1336,7 @@ class AssessmentService:
                 FROM "Risk Assessment".riskassessment_site_study s
                 INNER JOIN "{self.schema_name}".assessments a ON s.id = a.study_id
                 INNER JOIN "{self.schema_name}".assessment_approvals aa ON a.id = aa.assessment_id
-                WHERE {where_clause} AND LOWER(aa.action) = 'approved'
+                WHERE {where_clause} AND s.status != 'Inactive' AND LOWER(aa.action) = 'approved'
             """
             approved_assessments_result = db.execute_query(approved_assessments_query, [user_email])
             total_approved_assessments = approved_assessments_result[0]['count'] if approved_assessments_result else 0
@@ -1344,7 +1347,7 @@ class AssessmentService:
                 FROM "Risk Assessment".riskassessment_site_study s
                 INNER JOIN "{self.schema_name}".assessments a ON s.id = a.study_id
                 INNER JOIN "{self.schema_name}".assessment_approvals aa ON a.id = aa.assessment_id
-                WHERE {where_clause} AND LOWER(aa.action) = 'rejected'
+                WHERE {where_clause} AND s.status != 'Inactive' AND LOWER(aa.action) = 'rejected'
             """
             rejected_assessments_result = db.execute_query(rejected_assessments_query, [user_email])
             total_rejected_assessments = rejected_assessments_result[0]['count'] if rejected_assessments_result else 0
@@ -1355,7 +1358,7 @@ class AssessmentService:
                 FROM "Risk Assessment".riskassessment_site_study s
                 INNER JOIN "{self.schema_name}".assessments a ON s.id = a.study_id
                 LEFT JOIN "{self.schema_name}".assessment_approvals aa ON a.id = aa.assessment_id
-                WHERE {where_clause} 
+                WHERE {where_clause} AND s.status != 'Inactive'
                 AND a.status = 'Completed' 
                 AND (aa.id IS NULL OR LOWER(aa.action) NOT IN ('approved', 'rejected'))
             """

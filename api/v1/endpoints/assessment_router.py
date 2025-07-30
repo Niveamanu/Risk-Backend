@@ -302,7 +302,7 @@ async def approve_assessment(assessment_id: int, request: AssessmentApprovalRequ
             pi_query = """
                 SELECT principal_investigator, principal_investigator_email 
                 FROM "Risk Assessment".riskassessment_site_study
-                WHERE id = %s
+                WHERE id = %s AND status != 'Inactive'
             """
             pi_result = db.execute_query(pi_query, [assessment['study_id']])
             
@@ -451,9 +451,9 @@ async def reject_assessment(assessment_id: int, request: AssessmentApprovalReque
         try:
             # Get PI information from the study
             pi_query = """
-                SELECT principal_investigator, pi_eprincipal_investigator_emailmail 
+                SELECT principal_investigator, principal_investigator_email 
                 FROM "Risk Assessment".riskassessment_site_study
-                WHERE id = %s
+                WHERE id = %s AND status != 'Inactive'
             """
             pi_result = db.execute_query(pi_query, [assessment['study_id']])
             
