@@ -298,6 +298,8 @@ async def approve_assessment(assessment_id: int, request: AssessmentApprovalRequ
         
         # Create notification for PI when SD approves assessment
         try:
+            logging.info(f"Creating approval notification for assessment {assessment_id}")
+            
             # Get PI information from the study
             pi_query = """
                 SELECT principal_investigator, principal_investigator_email 
@@ -310,6 +312,8 @@ async def approve_assessment(assessment_id: int, request: AssessmentApprovalRequ
                 pi_name = pi_result[0]['principal_investigator'] or "Unknown PI"
                 pi_email = pi_result[0]['principal_investigator_email'] or "unknown@email.com"
                 
+                logging.info(f"PI info found - Name: {pi_name}, Email: {pi_email}")
+                
                 notification_result = notification_service.create_assessment_approval_notification(
                     assessment_id=assessment_id,
                     study_id=assessment['study_id'],
@@ -321,12 +325,15 @@ async def approve_assessment(assessment_id: int, request: AssessmentApprovalRequ
                     reason=request.reason,
                     comments=request.comments or "Assessment has been reviewed and approved by Study Director"
                 )
-                logging.info(f"Created approval notification: {notification_result}")
+                logging.info(f"Successfully created approval notification: {notification_result}")
             else:
-                logging.warning(f"PI information not found for study {assessment['study_id']}")
+                logging.error(f"PI information not found for study {assessment['study_id']} - notification not created")
         except Exception as notification_error:
-            logging.warning(f"Failed to create approval notification: {notification_error}")
-            # Don't fail the approval if notification fails
+            logging.error(f"Failed to create approval notification for assessment {assessment_id}: {str(notification_error)}")
+            logging.error(f"Error details: {type(notification_error).__name__}")
+            import traceback
+            logging.error(f"Traceback: {traceback.format_exc()}")
+            # Don't fail the approval if notification fails, but log the error
         
         return AssessmentApprovalResponse(
             success=True,
@@ -449,6 +456,8 @@ async def reject_assessment(assessment_id: int, request: AssessmentApprovalReque
         
         # Create notification for PI when SD rejects assessment
         try:
+            logging.info(f"Creating rejection notification for assessment {assessment_id}")
+            
             # Get PI information from the study
             pi_query = """
                 SELECT principal_investigator, principal_investigator_email 
@@ -461,6 +470,8 @@ async def reject_assessment(assessment_id: int, request: AssessmentApprovalReque
                 pi_name = pi_result[0]['principal_investigator'] or "Unknown PI"
                 pi_email = pi_result[0]['principal_investigator_email'] or "unknown@email.com"
                 
+                logging.info(f"PI info found - Name: {pi_name}, Email: {pi_email}")
+                
                 notification_result = notification_service.create_assessment_approval_notification(
                     assessment_id=assessment_id,
                     study_id=assessment['study_id'],
@@ -472,12 +483,15 @@ async def reject_assessment(assessment_id: int, request: AssessmentApprovalReque
                     reason=request.reason,
                     comments=request.comments or "Assessment has been reviewed and rejected by Study Director"
                 )
-                logging.info(f"Created rejection notification: {notification_result}")
+                logging.info(f"Successfully created rejection notification: {notification_result}")
             else:
-                logging.warning(f"PI information not found for study {assessment['study_id']}")
+                logging.error(f"PI information not found for study {assessment['study_id']} - notification not created")
         except Exception as notification_error:
-            logging.warning(f"Failed to create rejection notification: {notification_error}")
-            # Don't fail the rejection if notification fails
+            logging.error(f"Failed to create rejection notification for assessment {assessment_id}: {str(notification_error)}")
+            logging.error(f"Error details: {type(notification_error).__name__}")
+            import traceback
+            logging.error(f"Traceback: {traceback.format_exc()}")
+            # Don't fail the rejection if notification fails, but log the error
         
         return AssessmentApprovalResponse(
             success=True,
