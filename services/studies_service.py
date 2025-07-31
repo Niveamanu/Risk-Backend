@@ -74,10 +74,11 @@ class StudiesService:
                     s.site_director,
                     s.site_director_email,
                     a.monitoring_schedule,
-                    a.status as assessment_status
+                    a.status as assessment_status,
+                    s.crcname
                 FROM "Risk Assessment".riskassessment_site_study s
                 LEFT JOIN "Risk Assessment".assessments a ON s.id = a.study_id
-                WHERE {where_sql}
+                WHERE {where_sql} AND s.status != 'Inactive'
                 ORDER BY s.id DESC
             '''
             
@@ -122,7 +123,7 @@ class StudiesService:
                     CONCAT(s.sponsor, ' ', s.protocol) as label
                 FROM "Risk Assessment".riskassessment_site_study s
                 LEFT JOIN "Risk Assessment".assessments a ON s.id = a.study_id
-                WHERE a.overall_risk_score IS NOT NULL
+                WHERE a.overall_risk_score IS NOT NULL AND s.status != 'Inactive'
                 ORDER BY a.overall_risk_score DESC
                 LIMIT 10
             """
@@ -201,10 +202,11 @@ class StudiesService:
                     s.phase,
                     COALESCE(a.overall_risk_score, 0) as risk_score,
                     a.id as assessment_id,
-                    a.monitoring_schedule
+                    a.monitoring_schedule,
+                    s.crcname
                 FROM "Risk Assessment".riskassessment_site_study s
                 INNER JOIN "Risk Assessment".assessments a ON s.id = a.study_id
-                WHERE a.overall_risk_score IS NOT NULL
+                WHERE a.overall_risk_score IS NOT NULL AND s.status != 'Inactive'
             """
             
             # Add filters if provided
@@ -246,7 +248,8 @@ class StudiesService:
                     "phase": row['phase'] or "Not specified",
                     "risk": int(row['risk_score']),
                     "assessment_id": row['assessment_id'],  # Additional field for potential "View Assessment" action
-                    "monitoring_schedule": row['monitoring_schedule'] or "Not specified"
+                    "monitoring_schedule": row['monitoring_schedule'] or "Not specified",
+                    "crcname": row['crcname']
                 })
             
             logger.info(f"Generated risk table data with {len(risk_table_data)} entries")
@@ -278,7 +281,7 @@ class StudiesService:
             query = f'''
                 SELECT DISTINCT site, sponsor, protocol
                 FROM "Risk Assessment".riskassessment_site_study
-                WHERE {where_clause}
+                WHERE {where_clause} AND status != 'Inactive'
             '''
             params = [user_email]
             results = db.execute_query(query, params)
@@ -355,6 +358,9 @@ class StudiesService:
                 else:
                     raise HTTPException(status_code=400, detail="user_type must be 'PI' or 'Site Director'")
             
+            # Add status filter to exclude inactive studies
+            where_clauses.append("s.status != 'Inactive'")
+
             # Add WHERE clause if needed
             if where_clauses:
                 base_query += " WHERE " + " AND ".join(where_clauses)
@@ -424,7 +430,8 @@ class StudiesService:
                     s.principal_investigator_email,
                     s.site_director,
                     s.site_director_email
-                FROM "Risk Assessment".riskassessment_site_study s
+                FROM "Risk Assessment".riskassessment_site_study s 
+                WHERE s.status != 'Inactive'
                 ORDER BY s.id DESC
             '''
             
@@ -488,10 +495,11 @@ class StudiesService:
                     s.site_director_email,
                     a.status as assessment_status,
                     s.sponsor_code,
-                    a.created_at
+                    a.created_at,
+                    s.crcname
                 FROM "Risk Assessment".riskassessment_site_study s
                 INNER JOIN "Risk Assessment".assessments a ON s.id = a.study_id
-                WHERE a.overall_risk_score IS NOT NULL
+                WHERE a.overall_risk_score IS NOT NULL AND s.status != 'Inactive'
             """
             
             # Build filter conditions
@@ -519,7 +527,7 @@ class StudiesService:
                 SELECT COUNT(*) as total
                 FROM "Risk Assessment".riskassessment_site_study s
                 INNER JOIN "Risk Assessment".assessments a ON s.id = a.study_id
-                WHERE a.overall_risk_score IS NOT NULL
+                WHERE a.overall_risk_score IS NOT NULL AND s.status != 'Inactive'
             """
             
             if filter_conditions:
@@ -564,7 +572,8 @@ class StudiesService:
                     "site_director_email": row['site_director_email'],
                     "assessment_status": row['assessment_status'],
                     "sponsor_code": row['sponsor_code'],
-                    "created_at": row['created_at'].strftime('%Y-%m-%d') if row['created_at'] else None
+                    "created_at": row['created_at'].strftime('%Y-%m-%d') if row['created_at'] else None,
+                    "crcname": row['crcname']
                 })
             
             return {
@@ -594,7 +603,7 @@ class StudiesService:
                 SELECT DISTINCT s.site 
                 FROM "Risk Assessment".riskassessment_site_study s
                 INNER JOIN "Risk Assessment".assessments a ON s.id = a.study_id
-                WHERE s.site IS NOT NULL AND a.overall_risk_score IS NOT NULL
+                WHERE s.site IS NOT NULL AND a.overall_risk_score IS NOT NULL AND s.status != 'Inactive'
                 ORDER BY s.site
             """
             sites_result = db.execute_query(sites_query)
@@ -605,7 +614,7 @@ class StudiesService:
                 SELECT DISTINCT s.sponsor 
                 FROM "Risk Assessment".riskassessment_site_study s
                 INNER JOIN "Risk Assessment".assessments a ON s.id = a.study_id
-                WHERE s.sponsor IS NOT NULL AND a.overall_risk_score IS NOT NULL
+                WHERE s.sponsor IS NOT NULL AND a.overall_risk_score IS NOT NULL AND s.status != 'Inactive'
                 ORDER BY s.sponsor
             """
             sponsors_result = db.execute_query(sponsors_query)
@@ -616,7 +625,7 @@ class StudiesService:
                 SELECT DISTINCT s.protocol 
                 FROM "Risk Assessment".riskassessment_site_study s
                 INNER JOIN "Risk Assessment".assessments a ON s.id = a.study_id
-                WHERE s.protocol IS NOT NULL AND a.overall_risk_score IS NOT NULL
+                WHERE s.protocol IS NOT NULL AND a.overall_risk_score IS NOT NULL AND s.status != 'Inactive'
                 ORDER BY s.protocol
             """
             protocols_result = db.execute_query(protocols_query)
@@ -661,7 +670,7 @@ class StudiesService:
                     s.principal_investigator,
                     s.site_director
                 FROM "Risk Assessment".riskassessment_site_study s
-                WHERE s.id = %s
+                WHERE s.id = %s AND s.status != 'Inactive'
             """
             
             result = db.execute_query(query, [study_id])

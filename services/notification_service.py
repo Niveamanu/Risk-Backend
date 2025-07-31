@@ -124,7 +124,8 @@ class NotificationService:
                     FROM "{self.schema_name}".assessment_notifications n
                     JOIN "{self.schema_name}".riskassessment_site_study s ON n.study_id = s.id
                     LEFT JOIN "{self.schema_name}".assessments a ON s.id = a.study_id
-                    WHERE n.target_user_type = 'SD'
+                    WHERE n.target_user_type = 'SD' 
+                    AND s.status != 'Inactive'
                     ORDER BY n.action_date DESC
                     LIMIT 50
                 """
@@ -172,7 +173,8 @@ class NotificationService:
                     FROM "{self.schema_name}".assessment_notifications n
                     JOIN "{self.schema_name}".riskassessment_site_study s ON n.study_id = s.id
                     LEFT JOIN "{self.schema_name}".assessments a ON s.id = a.study_id
-                    WHERE n.target_user_type = 'PI'
+                    WHERE n.target_user_type = 'PI' 
+                    AND s.status != 'Inactive'
                     ORDER BY n.action_date DESC
                     LIMIT 50
                 """

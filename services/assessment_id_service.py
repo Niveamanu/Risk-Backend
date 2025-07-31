@@ -21,7 +21,7 @@ class AssessmentIDService:
             study_query = """
                 SELECT site, sponsor_code, protocol 
                 FROM "Risk Assessment".riskassessment_site_study
-                WHERE id = %s
+                WHERE id = %s AND status != 'Inactive'
             """
             study_result = db.execute_query(study_query, [study_id])
             
